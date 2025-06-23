@@ -129,6 +129,8 @@ def train(
     Returns:
         None
     """
+    LOGGER.info(f"Test size: {test_size}")
+    LOGGER.info(f"Batch size: {batch_size}")
     feature_classname = feature_classname.lower()
     assert feature_classname in FEATURE_CLASSNAMES
     assert model_classname in MODEL_CLASSNAMES
@@ -157,10 +159,6 @@ def train(
     fake_dir = Path(fake_dir)
     assert real_dir.is_dir()
     assert fake_dir.is_dir()
-    melgan_dir = fake_dir / "ljspeech_melgan"
-    # melganLarge_dir = fake_dir / "ljspeech_melgan_large"
-    assert melgan_dir.is_dir()
-    # assert melganLarge_dir.is_dir()
 
     LOGGER.info("Loading data...")
 
@@ -175,9 +173,14 @@ def train(
         label=1,
         amount_to_use=amount_to_use,
     )
+    LOGGER.info(f"Real dataset train: {len(real_dataset_train)} audio files.")
+    LOGGER.info(f"Real dataset test: {len(real_dataset_test)} audio files.")
 
-    fake_melgan_train, fake_melgan_test = load_directory_split_train_test(
-        path=melgan_dir,
+    if in_distribution:
+        return
+
+    fake_dataset_train, fake_dataset_test = load_directory_split_train_test(
+        path=fake_dir,
         feature_fn=feature_fn,
         feature_kwargs={},
         test_size=test_size,
@@ -188,40 +191,13 @@ def train(
         amount_to_use=amount_to_use,
     )
 
-    dataset_train, dataset_test = None, None
-    if in_distribution:
-        # ljspeech (real) and melgan (fake) are split into train and test
-        dataset_train = ConcatDataset([real_dataset_train, fake_melgan_train])
-        dataset_test = ConcatDataset([real_dataset_test, fake_melgan_test])
-        pos_weight = len(real_dataset_train) / len(fake_melgan_train)
-    else:
-        fake_dirs = list(fake_dir.glob("ljspeech_*"))
-        assert len(fake_dirs) == 7
-        # remove melgan from training data
-        fake_dirs.remove(melgan_dir)
-        # create datasets for each fake directory
-        fake_dataset_train = list(
-            map(
-                lambda _dir: load_directory_split_train_test(
-                    path=_dir,
-                    feature_fn=feature_fn,
-                    feature_kwargs={},
-                    test_size=0.01,
-                    use_double_delta=True,
-                    phone_call=False,
-                    pad=True,
-                    label=0,
-                    amount_to_use=amount_to_use,
-                )[0],
-                fake_dirs,
-            )
-        )
-        # all fake audio (except melgan) are used for training
-        fake_dataset_train = ConcatDataset(fake_dataset_train)
-        pos_weight = len(real_dataset_train) / len(fake_dataset_train)
-        # melgan is used for testing only
-        dataset_train = ConcatDataset([real_dataset_train, fake_dataset_train])
-        dataset_test = ConcatDataset([real_dataset_test, fake_melgan_test])
+    LOGGER.info(f"Fake dataset train: {len(fake_dataset_train)} audio files.")
+    LOGGER.info(f"Fake dataset test: {len(fake_dataset_test)} audio files.")
+
+    pos_weight = len(real_dataset_train) / len(fake_dataset_train)
+    dataset_train = ConcatDataset([real_dataset_train, fake_dataset_train])
+    dataset_test = ConcatDataset([real_dataset_test, fake_dataset_test])
+
 
     ###########################################################################
 
@@ -271,6 +247,7 @@ def eval_only(
     model_classname: str = "SimpleLSTM",
     in_distribution: bool = True,
     checkpoint=None,
+    skip_fake_dir: bool = False,
 ) -> None:
     """
     Train a model on WaveFake data.
@@ -331,11 +308,6 @@ def eval_only(
     real_dir = Path(real_dir)
     fake_dir = Path(fake_dir)
     assert real_dir.is_dir()
-    assert fake_dir.is_dir()
-    melgan_dir = fake_dir / "ljspeech_melgan"
-    # melganLarge_dir = fake_dir / "ljspeech_melgan_large"
-    assert melgan_dir.is_dir()
-    # assert melganLarge_dir.is_dir()
 
     LOGGER.info("Loading data...")
 
@@ -351,24 +323,29 @@ def eval_only(
         amount_to_use=amount_to_use,
     )
 
-    _, fake_melgan_test = load_directory_split_train_test(
-        path=melgan_dir,
-        feature_fn=feature_fn,
-        feature_kwargs={},
-        test_size=test_size,
-        use_double_delta=True,
-        phone_call=False,
-        pad=True,
-        label=0,
-        amount_to_use=amount_to_use,
-    )
+    if skip_fake_dir:
+        dataset_test = ConcatDataset([real_dataset_test])
+    else:
+        assert fake_dir.is_dir()
+        _, fake_melgan_test = load_directory_split_train_test(
+            path=fake_dir,
+            feature_fn=feature_fn,
+            feature_kwargs={},
+            test_size=test_size,
+            use_double_delta=True,
+            phone_call=False,
+            pad=True,
+            label=0,
+            amount_to_use=amount_to_use,
+        )
 
-    dataset_test = ConcatDataset([real_dataset_test, fake_melgan_test])
+        dataset_test = ConcatDataset([real_dataset_test, fake_melgan_test])
+
 
     ###########################################################################
 
     # LOGGER.info(f"Training model on {len(dataset_train)} audio files.")
-    LOGGER.info(f"Testing model on  {len(dataset_test)} audio files.")
+    LOGGER.info(f"Testing model on {len(dataset_test)} audio files.")
     # LOGGER.info(f"Train/Test ratio: {len(dataset_train) / len(dataset_test)}")
     # LOGGER.info(f"Real/Fake ratio in training: {round(pos_weight, 3)} (pos_weight)")
 
@@ -381,6 +358,9 @@ def eval_only(
     model_stats = summary(model, input_size, verbose=0)
     summary_str = str(model_stats)
     LOGGER.info(f"Model summary:\n{summary_str}")
+    LOGGER.info(f"amount_to_use: {amount_to_use}")
+    LOGGER.info(f"test_size: {test_size}")
+    LOGGER.info(f"save_dir: {save_dir}")
 
     ###########################################################################
 
@@ -406,6 +386,7 @@ def experiment(
     amount_to_use: Union[int, None] = None,
     restore: bool = False,
     evaluate_only: bool = False,
+    skip_fake_dir: bool = False,
     **kwargs,
 ):
     root_save_dir = Path("saved")
@@ -415,7 +396,7 @@ def experiment(
     restore_path = save_dir / "best.pt"
     if restore and restore_path.is_file():
         LOGGER.info(f"Restoring from {restore_path}")
-        ckpt = torch.load(restore_path, map_location=lambda storage, loc: storage)
+        ckpt = torch.load(restore_path, map_location=lambda storage, loc: storage, weights_only=False)
     else:
         ckpt = None
 
@@ -433,11 +414,13 @@ def experiment(
             epochs=epochs,
             device=device,
             batch_size=batch_size,
+            test_size=1, # when only evaluating, let's evaluate the whole provided data
             save_dir=save_dir,
             feature_classname=feature_classname,
             model_classname=model_classname,
             in_distribution=in_distribution,
             checkpoint=ckpt,
+            skip_fake_dir=skip_fake_dir,
         )
     else:
         train(
@@ -458,7 +441,7 @@ def experiment(
 def debug(real_dir: str, fake_dir: str, device: str):
     for model_classname in KWARGS_MAP.keys():
         for feature_classname in KWARGS_MAP[model_classname].keys():
-            for in_distribution in [True, False]:
+            for in_distribution in [False]:
                 exp_setup = "I" if in_distribution else "O"
                 exp_name = f"{model_classname}_{feature_classname}_{exp_setup}"
                 try:
@@ -474,7 +457,8 @@ def debug(real_dir: str, fake_dir: str, device: str):
                         in_distribution=in_distribution,
                         real_dir=real_dir,
                         fake_dir=fake_dir,
-                        amount_to_use=160,
+                        # amount_to_use=160,
+                        amount_to_use=None,
                     )
                     printc(f">>>>> DEBUGGING Done: {exp_name}\n\n")
                 except Exception as e:
@@ -538,7 +522,7 @@ def parse_args():
         help="Whether to use in distribution experiment setup. (default: True)",
         choices=["True", "False"],
         type=bool,
-        default=True,
+        default=False,
     )
     parser.add_argument(
         "--device",
@@ -559,6 +543,11 @@ def parse_args():
     parser.add_argument(
         "--eval_only",
         help="Whether to evaluate only.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--skip_fake_dir",
+        help="Whether to skip the fake directory when evaluating a model (this makes sense only when the test data is compounded only by real items).",
         action="store_true",
     )
     parser.add_argument(
@@ -603,6 +592,7 @@ def main():
             amount_to_use=160 if args.debug else None,
             restore=args.restore,
             evaluate_only=args.eval_only,
+            skip_fake_dir=args.skip_fake_dir,
         )
         printc(f">>>>> Experiment Done: {exp_name}\n\n")
     except Exception as e:
