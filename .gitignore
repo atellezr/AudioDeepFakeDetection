@@ -441,3 +441,5 @@ TSWLatexianTemp*
 
 # glossaries
 *.glstex
+
+**/*.log
