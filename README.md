@@ -95,10 +95,18 @@ To make sure all models can run successfully on your device, you can run the fol
 python train.py --debug_all
 ```
 
-To train the model `ShallowCNN` with `lfcc` features in the in-distribution setting, you can run the following command:
+To train all models, you can run the following commands:
 
 ```bash
-python train.py --real data/real --fake data/fake --batch_size 128 --epochs 20 --seed 42 --feature_classname lfcc --model_classname ShallowCNN
+python train --real data/real_books --fake data/fakes --feature_classname lfcc --model_classname ShallowCNN &>> train_models.log
+python train --real data/real_books --fake data/fakes --feature_classname mfcc --model_classname ShallowCNN &>> train_models.log
+python train --real data/real_books --fake data/fakes --feature_classname lfcc --model_classname SimpleLSTM &>> train_models.log
+python train --real data/real_books --fake data/fakes --feature_classname mfcc --model_classname SimpleLSTM &>> train_models.log
+python train --real data/real_books --fake data/fakes --feature_classname lfcc --model_classname MLP &>> train_models.log
+python train --real data/real_books --fake data/fakes --feature_classname mfcc --model_classname MLP &>> train_models.log
+python train --real data/real_books --fake data/fakes --feature_classname wave --model_classname TSSD &>> train_models.log
+python train --real data/real_books --fake data/fakes --feature_classname wave --model_classname WaveRNN &>> train_models.log
+python train --real data/real_books --fake data/fakes --feature_classname wave --model_classname WaveLSTM &>> train_models.log
 ```
 
 Please use inline environment variable `CUDA_VISIBLE_DEVICES` to specify the GPU device(s) to use. For example:
@@ -115,6 +123,23 @@ To evaluate on the test set using trained model, you can run the following comma
 
 ```bash
 python train.py --feature_classname lfcc --model_classname ShallowCNN --restore --eval_only
+```
+
+Or to evaluate all models with different folders:
+
+```bash
+python train --feature_classname lfcc --model_classname SimpleLSTM --restore --eval_only --real data/podcasts --fake data/fakes &>> eval_models.log
+python train --feature_classname mfcc --model_classname SimpleLSTM --restore --eval_only --real data/podcasts --fake data/fakes &>> eval_models.log
+python train --feature_classname lfcc --model_classname ShallowCNN --restore --eval_only --real data/podcasts --fake data/fakes &>> eval_models.log
+python train --feature_classname mfcc --model_classname ShallowCNN --restore --eval_only --real data/podcasts --fake data/fakes &>> eval_models.log
+python train --feature_classname lfcc --model_classname MLP --restore --eval_only --real data/podcasts --fake data/fakes &>> eval_models.log
+python train --feature_classname mfcc --model_classname MLP --restore --eval_only --real data/podcasts --fake data/fakes &>> eval_models.log
+python train --feature_classname wave --model_classname TSSD --restore --eval_only --real data/podcasts --fake data/fakes &>> eval_models.log
+python train --feature_classname wave --model_classname WaveRNN --restore --eval_only --real data/podcasts --fake data/fakes &>> eval_models.log
+python train --feature_classname wave --model_classname WaveLSTM --restore --eval_only --real data/podcasts --fake data/fakes &>> eval_models.log
+
+# in order to generate the table with the results and the ROC curve:
+python metrics.py
 ```
 
 Run the following command to re-compute the evaluation results based on saved predictions and labels:
