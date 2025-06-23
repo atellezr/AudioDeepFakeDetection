@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html>
+<head>
+<style>table, th, td { border: 1px solid black; border-collapse: collapse; } th, td { padding: 10px; }</style>
+</head>
 <body>
 <h1>Empirical Results</h1>
 <table  class="table has-text-centered mx-auto">
-<thead><tr><td>Experiment</td><td>Accuracy</td><td><abbr title="F1 score">F1</abbr></td><td><abbr title="Area Under the Receiver Operating Characteristic Curve">ROC AUC</abbr></td><td><abbr title="Equal Error Rate">EER</abbr></td></tr></thead>
-<tr><td>MLP_mfcc_I</td><td>0.500</td><td>0.000</td><td>0.5000</td><td>0.5000</td></tr>
-<tr><td>WaveLSTM_wave_O</td><td>0.500</td><td>0.000</td><td>0.5000</td><td>0.5000</td></tr>
-<tr><td>WaveRNN_wave_O</td><td>0.500</td><td>0.000</td><td>0.5000</td><td>0.5000</td></tr>
-<tr><td>WaveRNN_wave_I</td><td>0.653</td><td>0.649</td><td>0.6527</td><td>0.3502</td></tr>
-<tr><td>WaveLSTM_wave_I</td><td>0.749</td><td>0.742</td><td>0.7494</td><td>0.2640</td></tr>
-<tr><td>ShallowCNN_lfcc_O</td><td>0.937</td><td>0.939</td><td>0.9366</td><td>0.0926</td></tr>
-<tr><td>TSSD_wave_O</td><td>0.956</td><td>0.957</td><td>0.9561</td><td>0.0561</td></tr>
-<tr><td>SimpleLSTM_mfcc_I</td><td>0.960</td><td>0.960</td><td>0.9601</td><td>0.0404</td></tr>
-<tr><td>SimpleLSTM_lfcc_O</td><td>0.965</td><td>0.965</td><td>0.9651</td><td>0.0441</td></tr>
-<tr><td>SimpleLSTM_lfcc_I</td><td>0.996</td><td>0.996</td><td>0.9962</td><td>0.0042</td></tr>
-<tr><td>ShallowCNN_mfcc_I</td><td>0.997</td><td>0.997</td><td>0.9968</td><td>0.0049</td></tr>
-<tr><td>TSSD_wave_I</td><td>0.999</td><td>0.999</td><td>0.9994</td><td>0.0011</td></tr>
-<tr><td>ShallowCNN_lfcc_I</td><td>1.000</td><td>1.000</td><td>0.9996</td><td>0.0004</td></tr>
+<thead><tr><td>Experiment</td><td>Accuracy</td><td><abbr title="F1 score">F1</abbr></td><td><abbr title="Area Under the Receiver Operating Characteristic Curve">ROC AUC</abbr></td><td><abbr title="Equal Error Rate">EER</abbr></td><td><abbr title="True negatives">TN</abbr></td><td><abbr title="False positives">FP</abbr></td><td><abbr title="False negatives">FN</abbr></td><td><abbr title="True positives">TP</abbr></td></tr></thead>
+<tr><td>SimpleLSTM_mfcc_O</td><td>0.320</td><td>0.484</td><td>0.3203</td><td>0.6100</td><td>0.004</td><td>0.996</td><td>0.363</td><td>0.637</td></tr>
+<tr><td>MLP_lfcc_O</td><td>0.500</td><td>0.666</td><td>0.4998</td><td>0.5001</td><td>0.001</td><td>0.999</td><td>0.001</td><td>0.999</td></tr>
+<tr><td>TSSD_wave_O</td><td>0.500</td><td>0.667</td><td>0.5000</td><td>0.5000</td><td>0.000</td><td>1.000</td><td>0.000</td><td>1.000</td></tr>
+<tr><td>ShallowCNN_mfcc_O</td><td>0.501</td><td>0.667</td><td>0.5007</td><td>0.4996</td><td>0.001</td><td>0.999</td><td>0.000</td><td>1.000</td></tr>
+<tr><td>MLP_mfcc_O</td><td>0.500</td><td>0.667</td><td>0.5004</td><td>0.4998</td><td>0.001</td><td>0.999</td><td>0.000</td><td>1.000</td></tr>
+<tr><td>SimpleLSTM_lfcc_O</td><td>0.518</td><td>0.675</td><td>0.5182</td><td>0.4907</td><td>0.036</td><td>0.964</td><td>0.000</td><td>1.000</td></tr>
+<tr><td>ShallowCNN_lfcc_O</td><td>0.528</td><td>0.679</td><td>0.5277</td><td>0.4857</td><td>0.055</td><td>0.945</td><td>0.000</td><td>1.000</td></tr>
+<tr><td>WaveLSTM_wave_O</td><td>0.531</td><td>0.680</td><td>0.5306</td><td>0.4841</td><td>0.065</td><td>0.935</td><td>0.003</td><td>0.997</td></tr>
+<tr><td>WaveRNN_wave_O</td><td>0.997</td><td>0.997</td><td>0.9969</td><td>0.0053</td><td>0.995</td><td>0.005</td><td>0.001</td><td>0.999</td></tr>
 </table>
 </body>
 </html>
