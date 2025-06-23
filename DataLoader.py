@@ -74,7 +74,7 @@ class AudioDataset(Dataset):
         self._paths = paths
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, int]:
-        path = self._paths[index]
+        path = str(self._paths[index])
 
         waveform, sample_rate = torchaudio.load(path, normalize=self.normalize)
 
